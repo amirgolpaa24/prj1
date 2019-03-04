@@ -1,21 +1,52 @@
 package com.example.prj1;
 
-        import android.content.BroadcastReceiver;
-        import android.content.Context;
-        import android.content.Intent;
+import android.content.Intent;
+import java.util.ArrayList;
 
-        import java.util.ArrayList;
+public class NotificationCenter implements Subject {
 
-public class NotificationCenter extends BroadcastReceiver {
+    static Intent data_loaded = new Intent();
+    private static NotificationCenter INSTANCE = null;
+    private ArrayList<RepositoryObserver> mObservers;
 
-    Intent data_loaded = new Intent();
-
-    @Override
-    public void onReceive(Context context, Intent intent) {
-
+    private NotificationCenter() {
+        mObservers = new ArrayList<>();
     }
 
-    public void data_loaded(ArrayList arrayList){
-        MainActivity.createTextView(arrayList);
+    public static NotificationCenter getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = new NotificationCenter();
+        }
+        return INSTANCE;
+    }
+
+    @Override
+    public void registerObserver(RepositoryObserver repositoryObserver) {
+        if(!mObservers.contains(repositoryObserver)) {
+            mObservers.add(repositoryObserver);
+        }
+    }
+
+    @Override
+    public void unregisterObserver(RepositoryObserver repositoryObserver) {
+        if(mObservers.contains(repositoryObserver)) {
+            mObservers.remove(repositoryObserver);
+        }
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (RepositoryObserver observer: mObservers) {
+            observer.onUserDataChanged(data_loaded);
+        }
+    }
+
+    public void data_loaded(ArrayList<Integer> arrayList){
+        int[] array = new int[arrayList.size()];
+        for (int i = 0; i < arrayList.size(); i++){
+            array[i] = arrayList.get(i);
+        }
+        data_loaded.putExtra("values", array);
+        notifyObservers();
     }
 }

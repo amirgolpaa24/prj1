@@ -1,23 +1,19 @@
 package com.example.prj1;
 
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import java.io.FileOutputStream;
 
-import java.util.ArrayList;
+public class MainActivity extends AppCompatActivity implements RepositoryObserver {
 
-public class MainActivity extends AppCompatActivity {
-
-    NotificationCenter notificationCenter = new NotificationCenter();
+    NotificationCenter notificationCenter = NotificationCenter.getInstance();
     MessageController messageController = new MessageController();
-    static LinearLayout linearLayout;
-    static ArrayList<Integer> arrayList = new ArrayList<>();
-    static TextView textView;
+    LinearLayout linearLayout;
+    TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,38 +21,55 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         linearLayout = (LinearLayout) findViewById(R.id.linearLayout);
-        textView = new TextView(this);
-        registerReceiver(notificationCenter, new IntentFilter("data_loaded"));
+        notificationCenter.registerObserver(this);
 
 
+//        ********************************************************
+//        use this codes for create file
+
+
+//        try {
+//            FileOutputStream fileOutputStream = this.openFileOutput("file", MODE_PRIVATE);
+//            fileOutputStream.write(null);
+//            fileOutputStream.close();
+//        }catch (Exception e){
+//            e.getStackTrace();
+//        }
+
+
+//        ********************************************************
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        unregisterReceiver(notificationCenter);
+        notificationCenter.unregisterObserver(this);
 
     }
 
     public void clearIntent(View view){
         linearLayout.removeAllViews();
-        MainActivity.arrayList.clear();
-        MessageController.cache.clear();
-        sendBroadcast(new Intent("Linear layout cleared"));
     }
     public void refreshIntent(View view){
-        arrayList = messageController.fetch(true, this);
-        notificationCenter.data_loaded(arrayList);
+        if (linearLayout.getChildCount() == 0){
+            messageController.fetch(true, this);
+        }
     }
     public void getIntent(View view){
-        arrayList = messageController.fetch(false, this);
-        notificationCenter.data_loaded(arrayList);
+        messageController.fetch(false, this);
     }
-    public static void createTextView(ArrayList<Integer> arrayList){
+
+    @Override
+    public void onUserDataChanged(Intent intent) {
+        textView = new TextView(this);
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < arrayList.size(); i++){
-            stringBuilder.append(arrayList.get(i));
+        int[] array = intent.getIntArrayExtra("values");
+        for (int i = 0; i < intent.getIntArrayExtra("values").length; i++){
+            stringBuilder.append(array[i] + " ");
+            if (array[i]%10 == 0 && i != intent.getIntArrayExtra("values").length -1){
+                stringBuilder.append("\n");
+            }
         }
         textView.setText(stringBuilder);
         linearLayout.addView(textView);
