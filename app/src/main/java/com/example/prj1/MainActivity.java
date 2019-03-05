@@ -12,8 +12,8 @@ public class MainActivity extends AppCompatActivity implements RepositoryObserve
 
     NotificationCenter notificationCenter = NotificationCenter.getInstance();
     MessageController messageController = new MessageController();
-    LinearLayout linearLayout;
     TextView textView;
+    static LinearLayout linearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +52,8 @@ public class MainActivity extends AppCompatActivity implements RepositoryObserve
         linearLayout.removeAllViews();
     }
     public void refreshIntent(View view){
-        if (linearLayout.getChildCount() == 0){
-            messageController.fetch(true, this);
-        }
+        messageController.fetch(true, this);
+
     }
     public void getIntent(View view){
         messageController.fetch(false, this);
@@ -63,13 +62,13 @@ public class MainActivity extends AppCompatActivity implements RepositoryObserve
     @Override
     public void onUserDataChanged(Intent intent) {
         textView = new TextView(this);
+
+//        maghadire mojud dar intent e data_loaded ra dar stringBuilder minevisim:
+
         StringBuilder stringBuilder = new StringBuilder();
         int[] array = intent.getIntArrayExtra("values");
         for (int i = 0; i < intent.getIntArrayExtra("values").length; i++){
             stringBuilder.append(array[i] + " ");
-            if (array[i]%10 == 0 && i != intent.getIntArrayExtra("values").length -1){
-                stringBuilder.append("\n");
-            }
         }
         textView.setText(stringBuilder);
         linearLayout.addView(textView);

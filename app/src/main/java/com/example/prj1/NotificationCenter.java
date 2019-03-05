@@ -13,6 +13,8 @@ public class NotificationCenter implements Subject {
         mObservers = new ArrayList<>();
     }
 
+//    notificationCenter ra singleton tarif mikonim:
+
     public static NotificationCenter getInstance() {
         if(INSTANCE == null) {
             INSTANCE = new NotificationCenter();
@@ -46,6 +48,9 @@ public class NotificationCenter implements Subject {
         for (int i = 0; i < arrayList.size(); i++){
             array[i] = arrayList.get(i);
         }
+
+//        be data_loaded araye ra midahim:
+
         data_loaded.putExtra("values", array);
         notifyObservers();
     }
