@@ -7,11 +7,14 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements RepositoryObserver {
 
+    protected static final String TAG = "Project 1";
+
     NotificationCenter notificationCenter = NotificationCenter.getInstance();
-    MessageController messageController = new MessageController();
+    MessageController messageController = new MessageController(this);
     TextView textView;
     static LinearLayout linearLayout;
 
@@ -20,8 +23,13 @@ public class MainActivity extends AppCompatActivity implements RepositoryObserve
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         linearLayout = (LinearLayout) findViewById(R.id.linearLayout);
         notificationCenter.registerObserver(this);
+
+
+        messageController.cloud.start();
+        messageController.storage.start();
 
 
 //        ********************************************************
@@ -52,18 +60,19 @@ public class MainActivity extends AppCompatActivity implements RepositoryObserve
         linearLayout.removeAllViews();
     }
     public void refreshIntent(View view){
-        messageController.fetch(true, this);
+        ArrayList arrayList = messageController.fetch(true);
+        if (arrayList != null){
+            notificationCenter.data_loaded(arrayList);
+        }
 
     }
     public void getIntent(View view){
-        messageController.fetch(false, this);
+        notificationCenter.data_loaded(messageController.fetch(false));
     }
 
     @Override
     public void onUserDataChanged(Intent intent) {
         textView = new TextView(this);
-
-//        maghadire mojud dar intent e data_loaded ra dar stringBuilder minevisim:
 
         StringBuilder stringBuilder = new StringBuilder();
         int[] array = intent.getIntArrayExtra("values");

@@ -1,17 +1,61 @@
 package com.example.prj1;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.TextView;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class StorageManager {
+public class StorageManager extends Thread {
+
+    static Context context;
+    Object lock;
+    Object runStorageThread;
 
 
+    public StorageManager(Object runStorageThread, Object lock, Context context){
+        this.runStorageThread = runStorageThread;
+        this.lock = lock;
+        this.context = context;
+    }
+
+    @Override
+    public void run() {
+
+        super.run();
+        while (true){
+                synchronized (runStorageThread){
+                    try {
+                        runStorageThread.wait();
+                    }
+                    catch (InterruptedException e){
+                        e.getStackTrace();
+                    }
+
+                    if (MessageController.loadMethodIsCalled == false){
+                        save(MessageController.theNumberThatMustBeSavedInFile, this.context);
+                    }
+                    else {
+                        load(this.context);
+                    }
+
+                }
+
+            synchronized (lock){
+                lock.notify();
+            }
+        }
+
+    }
 
     public static void save(int lastNumber, Context context){
+
+        Log.i(MainActivity.TAG, "StorageManager method is running in:\n" +
+                "pid: " + android.os.Process.myPid() + "\t" +
+                "tid: " + android.os.Process.myTid());
+
         try {
             FileOutputStream fos = context.openFileOutput("file", context.MODE_PRIVATE);
             fos.write(lastNumber);
@@ -22,32 +66,34 @@ public class StorageManager {
         }
     }
 
-    public static ArrayList load(Context context){
 
-//        yek araye baraye bargardandan dar khoruji tarif mikonim:
-        ArrayList<Integer> arrayList = new ArrayList<>();
+
+    public static void load(Context context){
+
+        Log.i(MainActivity.TAG, "StorageManager method is running in:\n" +
+                "pid: " + android.os.Process.myPid() + "\t" +
+                "tid: " + android.os.Process.myTid());
+
+        MessageController.cache = new ArrayList();
+
 
         int lastNumberInFile = 0;
         int lastNumberInLinearLayout;
         try {
-
-//            agar file khali bashad hich arayeyi barnemigardanad:
-
-            FileInputStream fis = context.openFileInput("file");
-            if (fis.available() == 0) {
-                fis.close();
-                return null;
-            }
-            else {
-                lastNumberInFile = fis.read();
-                fis.close();
-            }
+                FileInputStream fis = context.openFileInput("file");
+                if (fis.available() == 0) {
+                    fis.close();
+                    MessageController.cache = null;
+                }
+                else {
+                    lastNumberInFile = fis.read();
+                    fis.close();
+                }
             }
         catch(IOException e){
                 e.getStackTrace();
             }
 
-//            akharin textView e mojud dar linearLayout ra dar nazar migirim:
 
         TextView textView = (TextView) MainActivity.linearLayout.getChildAt(MainActivity.linearLayout.getChildCount()-1);
         if (textView == null){
@@ -70,9 +116,10 @@ public class StorageManager {
 
             lastNumberInLinearLayout = Integer.parseInt(values[9]);
         }
+
         if (lastNumberInLinearLayout < lastNumberInFile){
             for (int i = 1; i <= 10; i++){
-                arrayList.add(lastNumberInLinearLayout + i);
+                MessageController.cache.add(lastNumberInLinearLayout + i);
             }
         }
         else{
@@ -80,8 +127,7 @@ public class StorageManager {
 //            dar sorati k akharin adade chap shode dar linearLayour bozorgtar ya mosavie adade mojud
 //            dar file bashad hich arayeyi barnemigardanad:
 
-            return null;
+            MessageController.cache = null;
         }
-        return arrayList;
     }
 }

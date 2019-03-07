@@ -5,34 +5,71 @@ import java.util.ArrayList;
 
 public class MessageController {
 
-    static ArrayList<Integer> cache = new ArrayList<>();
+    Context context;
+    static ArrayList cache;
+    static boolean loadMethodIsCalled;
+    static int theNumberThatMustBeSavedInFile;
+    static Object runStorageThread = new Object();
+    static Object runCloudThread = new Object();
+    static Object lock = new Object();
+    Thread cloud;
+    Thread storage;
 
-    public static void fetch(boolean fromCatch, Context context){
-        if (fromCatch == true){
+    public MessageController(Context context){
+        this.context = context;
+        ConnectionManager connectionManager = new ConnectionManager(runCloudThread, lock, context);
+        StorageManager storageManager = new StorageManager(runStorageThread, lock, context);
+        this.cloud = new Thread(connectionManager);
+        this.storage = new Thread(storageManager);
+    }
 
-//            dar sorati ke file khali nabashad va ya akharin meghdare chap shode dar linearLayout
-//            kochektar az adade mojud dar file bashad darim:
 
-            if (StorageManager.load(context) != null){
-                ArrayList<Integer> arrayList = StorageManager.load(context);
-                for (int i = 0; i < arrayList.size(); i++){
-                    cache.add(arrayList.get(i));
+    public ArrayList fetch(boolean fromCache){
+
+        if (fromCache == true){
+
+            synchronized (lock){
+
+                    loadMethodIsCalled = true;
+                synchronized (runStorageThread){
+                    runStorageThread.notify();
                 }
-                NotificationCenter.getInstance().data_loaded(arrayList);
+                    try {
+                        lock.wait();
+                    }catch (InterruptedException e){
+                        e.getStackTrace();
+                    }
             }
         }
-        else{
-            ArrayList<Integer> arrayList = ConnectionManager.load(context);
-            for (int i = 0; i < 10; i++) {
-                cache.add(arrayList.get(i));
-                if (i == 9){
 
-//                    akharin adadi ke chap mishavad ra dar file save mikonim:
+        else {
 
-                    StorageManager.save(arrayList.get(i), context);
+            synchronized (lock){
+
+                synchronized (runCloudThread){
+                    runCloudThread.notify();
                 }
+                try {
+                    lock.wait();
+                }
+                catch (InterruptedException e){
+                    e.getStackTrace();
+                }
+
+                        loadMethodIsCalled = false;
+                        theNumberThatMustBeSavedInFile = (int) cache.get(9);
+
+                        synchronized (runStorageThread){
+                            runStorageThread.notify();
+                        }
+                    try {
+                        lock.wait();
+                    }
+                    catch (InterruptedException e){
+                        e.getStackTrace();
+                    }
             }
-            NotificationCenter.getInstance().data_loaded(arrayList);
         }
+        return this.cache;
     }
 }

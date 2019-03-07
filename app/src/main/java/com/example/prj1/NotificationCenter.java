@@ -1,6 +1,8 @@
 package com.example.prj1;
 
 import android.content.Intent;
+import android.util.Log;
+
 import java.util.ArrayList;
 
 public class NotificationCenter implements Subject {
@@ -24,6 +26,11 @@ public class NotificationCenter implements Subject {
 
     @Override
     public void registerObserver(RepositoryObserver repositoryObserver) {
+
+        Log.i(MainActivity.TAG, "NotificationCenter method is running in:\n" +
+                "pid: " + android.os.Process.myPid() + "\t" +
+                "tid: " + android.os.Process.myTid());
+
         if(!mObservers.contains(repositoryObserver)) {
             mObservers.add(repositoryObserver);
         }
@@ -31,6 +38,11 @@ public class NotificationCenter implements Subject {
 
     @Override
     public void unregisterObserver(RepositoryObserver repositoryObserver) {
+
+        Log.i(MainActivity.TAG, "NotificationCenter method is running in:\n" +
+                "pid: " + android.os.Process.myPid() + "\t" +
+                "tid: " + android.os.Process.myTid());
+
         if(mObservers.contains(repositoryObserver)) {
             mObservers.remove(repositoryObserver);
         }
@@ -38,12 +50,22 @@ public class NotificationCenter implements Subject {
 
     @Override
     public void notifyObservers() {
+
+        Log.i(MainActivity.TAG, "NotificationCenter method is running in:\n" +
+                "pid: " + android.os.Process.myPid() + "\t" +
+                "tid: " + android.os.Process.myTid());
+
         for (RepositoryObserver observer: mObservers) {
             observer.onUserDataChanged(data_loaded);
         }
     }
 
     public void data_loaded(ArrayList<Integer> arrayList){
+
+        Log.i(MainActivity.TAG, "NotificationCenter method is running in:\n" +
+                "pid: " + android.os.Process.myPid() + "\t" +
+                "tid: " + android.os.Process.myTid());
+
         int[] array = new int[arrayList.size()];
         for (int i = 0; i < arrayList.size(); i++){
             array[i] = arrayList.get(i);
